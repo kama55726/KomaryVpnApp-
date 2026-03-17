@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komary VPN</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: #0a0a0a;
+        }
+        
+        /* Анимированный фон */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 30% 50%, rgba(255, 215, 0, 0.15) 0%, transparent 30%),
+                        radial-gradient(circle at 70% 80%, rgba(0, 0, 0, 0.8) 0%, transparent 40%),
+                        repeating-linear-gradient(45deg, rgba(255, 215, 0, 0.05) 0px, rgba(255, 215, 0, 0.05) 2px, 
+                                                  rgba(0, 0, 0, 0.3) 2px, rgba(0, 0, 0, 0.3) 6px);
+            animation: gradientMove 20s ease infinite;
+            transform-origin: center;
+        }
+        
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.1) 0%, transparent 40%),
+                        radial-gradient(circle at 20% 80%, rgba(0, 0, 0, 0.9) 0%, transparent 50%);
+            animation: pulseGlow 8s ease infinite;
+        }
+        
+        @keyframes gradientMove {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+            50% {
+                transform: rotate(2deg) scale(1.05);
+            }
+            100% {
+                transform: rotate(0deg) scale(1);
+            }
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 20px;
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        0 0 30px rgba(255, 215, 0, 0.1);
+            animation: containerAppear 1s ease;
+        }
+        
+        @keyframes containerAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Переливающаяся надпись */
+        .glitch-title {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .glitch {
+            font-size: 42px;
+            font-weight: 800;
+            text-transform: uppercase;
+            position: relative;
+            text-shadow: 0.05em 0 0 rgba(255, 215, 0, 0.75),
+                        -0.025em -0.05em 0 rgba(0, 0, 0, 0.75),
+                        0.025em 0.05em 0 rgba(255, 215, 0, 0.75);
+            animation: glitch 600ms infinite;
+            letter-spacing: 2px;
+        }
+        
+        .glitch span {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .glitch span:first-child {
+            animation: glitch 650ms infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+            transform: translate(-0.025em, -0.0125em);
+            opacity: 0.8;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .glitch span:last-child {
+            animation: glitch 375ms infinite;
+            clip-path: polygon(0 80%, 100% 20%, 100% 100%, 0 100%);
+            transform: translate(0.0125em, 0.025em);
+            opacity: 0.8;
+            color: #000000;
+            text-shadow: -2px -2px 4px rgba(255,215,0,0.5);
+        }
+        
+        @keyframes glitch {
+            0% {
+                text-shadow: 0.05em 0 0 rgba(255, 215, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 0, 0, 0.75),
+                            -0.025em 0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            14% {
+                text-shadow: 0.05em 0 0 rgba(255, 215, 0, 0.75),
+                            -0.05em -0.025em 0 rgba(0, 0, 0, 0.75),
+                            -0.025em 0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            15% {
+                text-shadow: -0.05em -0.025em 0 rgba(255, 215, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 0, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            49% {
+                text-shadow: -0.05em -0.025em 0 rgba(255, 215, 0, 0.75),
+                            0.025em 0.025em 0 rgba(0, 0, 0, 0.75),
+                            -0.05em -0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            50% {
+                text-shadow: 0.025em 0.05em 0 rgba(255, 215, 0, 0.75),
+                            0.05em 0 0 rgba(0, 0, 0, 0.75),
+                            0 -0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            99% {
+                text-shadow: 0.025em 0.05em 0 rgba(255, 215, 0, 0.75),
+                            0.05em 0 0 rgba(0, 0, 0, 0.75),
+                            0 -0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+            100% {
+                text-shadow: -0.025em 0 0 rgba(255, 215, 0, 0.75),
+                            -0.025em -0.025em 0 rgba(0, 0, 0, 0.75),
+                            -0.025em -0.05em 0 rgba(255, 215, 0, 0.75);
+            }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-top: -20px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        /* Карточка с конфигом */
+        .config-card {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .config-label {
+            color: rgba(255, 215, 0, 0.8);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .config-label::before {
+            content: '🔑';
+            font-size: 16px;
+        }
+        
+        .config-box {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #FFD700;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            max-height: 120px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #FFD700 rgba(0, 0, 0, 0.3);
+        }
+        
+        .config-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .config-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+        }
+        
+        .config-box::-webkit-scrollbar-thumb {
+            background: #FFD700;
+            border-radius: 3px;
+        }
+        
+        /* Кнопки */
+        .button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .button:active {
+            transform: scale(0.98);
+        }
+        
+        .button-copy {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+        
+        .button-channel {
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            color: #FFD700;
+            border: 1px solid #FFD700;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.2);
+        }
+        
+        .success-message {
+            text-align: center;
+            color: #FFD700;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 215, 0, 0.1);
+            margin-top: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Декоративные элементы */
+        .glow-dots {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .glow-dots::before,
+        .glow-dots::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+        
+        .glow-dots::before {
+            background: rgba(255, 215, 0, 0.15);
+            top: -100px;
+            right: -100px;
+            animation: floatGlow 15s ease infinite;
+        }
+        
+        .glow-dots::after {
+            background: rgba(0, 0, 0, 0.5);
+            bottom: -100px;
+            left: -100px;
+            animation: floatGlow 20s ease infinite reverse;
+        }
+        
+        @keyframes floatGlow {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(50px, 30px) scale(1.1);
+            }
+            66% {
+                transform: translate(-30px, 50px) scale(0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="glow-dots"></div>
+    
+    <div class="container">
+        <div class="glitch-title">
+            <div class="glitch">
+                КОМАРУ VPN
+                <span>КОМАРУ VPN</span>
+                <span>КОМАРУ VPN</span>
+            </div>
+        </div>
+        <div class="subtitle">⚡ БЕЗОПАСНЫЙ ИНТЕРНЕТ ⚡</div>
+        
+        <div class="config-card">
+            <div class="config-label">Твой конфиг</div>
+            <div class="config-box" id="config-text">https://raw.githubusercontent.com/kama55726/KomaryServers/refs/heads/main/KomaryServ</div>
+            
+            <button class="button button-copy" onclick="copyConfig()">
+                <span>📋</span>
+                Скопировать конфиг
+            </button>
+            
+            <div id="copy-success" class="success-message hidden">
+                ✅ Конфиг скопирован!
+            </div>
+        </div>
+        
+        <button class="button button-channel" onclick="openChannel()">
+            <span>📢</span>
+            Перейти в канал
+        </button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+        
+        // Фиксированный конфиг
+        const CONFIG_URL = 'https://raw.githubusercontent.com/kama55726/KomaryServers/refs/heads/main/KomaryServ';
+        const CHANNEL_URL = 'https://t.me/KomaryVpn';
+        
+        document.getElementById('config-text').textContent = CONFIG_URL;
+        
+        // Копирование конфига
+        function copyConfig() {
+            navigator.clipboard.writeText(CONFIG_URL).then(() => {
+                const success = document.getElementById('copy-success');
+                success.classList.remove('hidden');
+                
+                // Вибрация (если поддерживается)
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notification('success');
+                }
+                
+                setTimeout(() => {
+                    success.classList.add('hidden');
+                }, 2000);
+            }).catch(err => {
+                alert('Ошибка при копировании');
+            });
+        }
+        
+        // Открыть канал
+        function openChannel() {
+            window.location.href = CHANNEL_URL;
+            
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+        
+        // Главная кнопка Telegram
+        tg.MainButton.setText('Закрыть');
+        tg.MainButton.onClick(() => tg.close());
+        tg.MainButton.show();
+        
+        // Анимация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = '1';
+        });
+    </script>
+</body>
+</html>
